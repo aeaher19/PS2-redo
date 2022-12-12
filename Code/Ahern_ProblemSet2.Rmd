@@ -1,0 +1,129 @@
+---
+title: "Problem Set 2"
+author: "Aubrey Ahern"
+date: "11/1/2022"
+output: html_document
+---
+
+set things up, clear r's memory, import necessary packages
+```{r}
+rm(list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+#library(ggfortify) may be used in place of library(dplyr) and library(ggplot2)
+```
+
+suck in data using here package, look at data using glimpse
+```{r}
+DF <- read.csv(here("Data", "Halloween_data_PS2.csv"))
+glimpse(DF)
+```
+
+convert variables costume and type from characters to factors
+```{r}
+DF$Costume <- as.factor(DF$Costume)
+DF$Type <- as.factor(DF$Type)
+```
+
+check to ensure the variables were converted correctly by examining data set
+```{r}
+glimpse(DF)
+str(DF)
+#str and glimpse are both good functions to use to examine data sets
+```
+
+first check to see if there are any errors in the data
+```{r}
+unique(DF$Costume)
+#these are the errors I was able to find...
+##error #1 = "Scary", "scary", and "scary " are considered different within the data
+##error #2 = "witch", "witch ", and "Witch" are all considered to be different costumes
+##error #3 = "Wonder Woman", "Wonder woman", and "wonder woman" are all considered to be different costumes
+##error #4 = "Creepy clown", "creepy clown", and "clown" are all considered to be different costumes
+```
+
+fix error #1
+```{r}
+scary <- which(DF$Type == "Scary" | DF$Type == "scary" | DF$Type == "scary ")
+DF$Type[scary] <- "Scary"
+#the inclusion of a space as well as differences in capitalization cause these variables to be counted separately in R
+```
+
+fix error #2
+```{r}
+witch <- which(DF$Costume == "Witch" | DF$Costume == "witch" | DF$Costume == "witch ")
+DF$Costume[witch] <- "witch"
+#the inclusion of a space as well as differences in capitalization cause these variables to be counted separately in R
+#which vs. witch is confusing lol
+```
+
+fix error #3
+```{r}
+wonder_woman <- which(DF$Costume == "wonder woman" | DF$Costume == "Wonder Woman" | DF$Costume == "Wonder woman")
+DF$Costume[wonder_woman] <- "Wonder Woman"
+#differences in capitalization cause these variables to be counted separately in R
+```
+
+fix error #4
+```{r}
+clown <- which(DF$Costume == "creepy clown" | DF$Costume == "clown" | DF$Costume == "Creepy clown")
+DF$Costume[clown] <- "clown"
+#differences in capitalization cause these variables to be counted separately in R
+```
+
+calculate mean age of trick-or-treaters and the mean number of pieces of candy taken broken down by costume and type
+```{r}
+figure1 <- DF %>%
+group_by(Costume, Type) %>%
+  summarise(
+    mean_age = mean(age, na.rm =T),
+    mean_candy = mean(candy_pieces, na.rm = T))
+#calculated means are stored in my new, figure1 data frame... i can now use this data frame to make a scatterplot...
+```
+
+create figure 1
+```{r}
+ggplot(figure1, aes(x = mean_age, y = mean_candy, color = Type)) +
+  geom_point(size = 2) +
+  xlab("Mean age of kid (years)") +
+  ylab("Mean number pieces taken") +
+  theme_bw()
+#xlab and ylab indicate axis labels
+#this figure looks like the one in the problem set, yay!
+#i am curious if we can/will ever include figure captions in R as seen on the problem set
+```
+
+isolate the data for children in “not scary” costumes who are 10 years old or younger 
+```{r}
+figure2 <- DF %>%
+group_by(Type = "Not scary") %>%
+filter(age <= 10)
+#i stored the "not scary" costumes in my new, figure2 data frame... i can now use this data frame to make a histogram as seen in the problemset
+```
+
+create figure 2
+```{r}
+ggplot(figure2, aes(x = age)) +
+  geom_histogram(bins = 4) + 
+  xlab("Age of child") +
+  ylab("Number")
+#xlab and ylab indicate axis labels
+#set four bars with "bins = 4"
+```
+
+(try to) create figure 3
+```{r}
+ggplot(DF, aes(x = age, y = Costume)) +
+  geom_boxplot() +
+  geom_point(size = 4, color = 'grey', alpha = 0.5) +
+  xlab("Child age (years)") +
+  ylab("Costume choice") +
+  facet_wrap(~Type)
+#reused the data frames i already created for the other questions
+#xlab and ylab indicate axis labels
+#this looks like the one displayed in the problem set, yay!
+```
+
+
+
